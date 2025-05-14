@@ -34,12 +34,12 @@ func scanRoomDate(rows *sql.Rows) (RoomDate, error) {
 	return r, nil
 }
 
-func (r *Storage) GetById(id int) (Room, error) {
+func (r *Storage) GetRoomById(id int) (Room, error) {
 	query := "SELECT * FROM room WHERE id = ?"
 	return db.QueryOnlyRow(r.db, query, scanRoom, id)
 }
 
-func (r *Storage) GetByUrl(url string) (Room, error) {
+func (r *Storage) GetRoomByUrl(url string) (Room, error) {
 	query := "SELECT * FROM room WHERE url = ?"
 	return db.QueryOnlyRow(r.db, query, scanRoom, url)
 }
@@ -73,4 +73,9 @@ func (r *Storage) InsertRoomDate(dates []ReqRoomDate, roomId int64) error {
 		}
 	}
 	return nil
+}
+
+func (r *Storage) GetRoomDatesByRoomID(roomId int64) ([]RoomDate, error) {
+	query := `SELECT * FROM room_dates WHERE room_id = ?`
+	return db.QueryRows(r.db, query, scanRoomDate, roomId)
 }

@@ -2,7 +2,7 @@ package room
 
 import "errors"
 
-func (r Room) CheckFieldType() (res bool, err error) {
+func CheckFieldType(r ReqCreateRoom) (res bool, err error) {
 	if !checkFieldTime(r.StartTime, r.EndTime) {
 		return false, errors.New("start and end time format is not accepted")
 	}
