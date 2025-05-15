@@ -2,6 +2,8 @@ package server
 
 import (
 	"better-when2meet/internal/room"
+	"better-when2meet/internal/user"
+
 	// "better-when2meet/internal/user"
 
 	"github.com/gin-gonic/gin"
@@ -26,17 +28,28 @@ func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 }
 
 // 방 정보 조회
-// func GetRoomInfoHandler(strg *room.Storage) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		url := c.Param("url")
-// 		room, err := strg.GetByUrl(url)
-// 		if err != nil {
-// 			c.JSON(404, gin.H{"error": "Room not found"})
-// 			return
-// 		}
-// 		c.JSON(200, room)
-// 	}
-// }
+// room 관련 정보, users , user의 availble time
+func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.HandlerFunc {
+	type Res struct{
+		roomInfo room.Room
+		users [] map[] 
+	} 
+	return func(c *gin.Context) {
+		url := c.Param("url")
+		room, err := strRoom.GetRoomByUrl(url)
+		if err != nil {
+			c.JSON(404, gin.H{"error": "Room not found"})
+			return
+		}
+		users, err := strgUser.GetUsersByroomId(int64(room.ID))
+		if err != nil {
+			c.JSON(404, gin.H{"error": "get user failed"})
+			return
+		}
+		for 
+
+	}
+}
 
 // // user 로그인
 // func GetRoomInfoHandler(strg *room.Storage) gin.HandlerFunc {

@@ -3,8 +3,8 @@ package user
 import "time"
 
 type User struct {
-	ID         int       `json:"id"`
-	RoomID     int       `json:"room_id"`
+	ID         int64     `json:"id"`
+	RoomID     int64     `json:"room_id"`
 	Name       string    `json:"name"`
 	Password   string    `json:"password"`
 	TimeRegion string    `json:"time_region"`
@@ -13,9 +13,9 @@ type User struct {
 }
 
 type AvailableTime struct {
-	ID            int       `json:"id"`
-	UserID        int       `json:"user_id"`
-	RoomID        int       `json:"room_id"`
+	ID            int64     `json:"id"`
+	UserID        int64     `json:"user_id"`
+	RoomID        int64     `json:"room_id"`
 	Date          time.Time `json:"date"`
 	HourEndSlot   int       `json:"hour_end_slot"`
 	HourStartSlot int       `json:"hour_start_slot"`

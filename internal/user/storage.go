@@ -31,12 +31,12 @@ func scanAvailableTime(rows *sql.Rows) (AvailableTime, error) {
 	return a, nil
 }
 
-func (u *Storage) GetUserById(id int64) (User, error) {
+func (u *Storage) UserById(id int64) (User, error) {
 	query := `select * from user where id = ?`
 	return db.QueryOnlyRow(u.db, query, scanUser, id)
 }
 
-func (u *Storage) GetUsersByroomId(id int64) ([]User, error) {
+func (u *Storage) UsersByroomId(id int64) ([]User, error) {
 	query := `select * from user where room_id = ?`
 	return db.QueryRows(u.db, query, scanUser, id)
 }
@@ -46,8 +46,42 @@ func (u *Storage) InsertUser(r ReqLogin, roomdId int64) (int64, error) {
 	return db.QueryExec(u.db, query, roomdId, r.Name, r.Password, r.TimeRegion)
 }
 
-func (u *Storage) GetTimesByUserId(id int64) ([]AvailableTime, error) {
+func (u *Storage) TimesByUserId(id int64) ([]AvailableTime, error) {
 	query := `select * from available_time where user_id = ?`
 
 	return db.QueryRows(u.db, query, scanAvailableTime, id)
+}
+
+func (u *Storage) UserDetailById(id int64) (UserDetail, error) {
+	user, e := u.UserById(id)
+	if e != nil {
+		return UserDetail{}, e
+	}
+
+	times, e := u.TimesByUserId(id)
+	if e != nil {
+		return UserDetail{}, e
+	}
+
+	return UserDetail{user, times}, nil
+}
+
+func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
+	var userDetails []UserDetail
+
+	users, e := u.UsersByroomId(id)
+	if e != nil {
+		return nil, e
+	}
+
+	for _, user := range users {
+		var userDetail UserDetail
+		userDetail, e = u.UserDetailById(user.ID)
+		if e != nil {
+			return nil, e
+		}
+
+		userDetails = append(userDetails, userDetail)
+	}
+	return userDetails, nil
 }

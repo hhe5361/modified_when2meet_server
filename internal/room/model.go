@@ -5,7 +5,7 @@ import (
 )
 
 type Room struct {
-	ID         int       `json:"id"`
+	ID         int64     `json:"id"`
 	Name       string    `json:"name"`
 	URL        string    `json:"url"`
 	StartTime  int       `json:"start_time"` //0
@@ -17,11 +17,11 @@ type Room struct {
 }
 
 type RoomDate struct {
-	ID     int `json:"id"`
-	RoomID int `json:"room_id"`
-	Year   int `json:"year"`
-	Month  int `json:"month"`
-	Day    int `json:"day"`
+	ID     int64 `json:"id"`
+	RoomID int64 `json:"room_id"`
+	Year   int   `json:"year"`
+	Month  int   `json:"month"`
+	Day    int   `json:"day"`
 }
 
 // only allow for below time region string
