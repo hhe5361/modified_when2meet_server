@@ -2,6 +2,7 @@ package user
 
 import (
 	"better-when2meet/internal/db"
+	"better-when2meet/internal/helper"
 	"database/sql"
 	"errors"
 )
@@ -84,4 +85,21 @@ func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
 		userDetails = append(userDetails, userDetail)
 	}
 	return userDetails, nil
+}
+
+func (u *Storage) Login(name string, pwd string, roomId int64) (User, error) {
+	query := `SELECT * FROM user WHERE name = ? AND room_id = ?`
+	user, err := db.QueryOnlyRow(u.db, query, scanUser, name, roomId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return User{}, ErrUserNotFound
+		}
+		return User{}, err
+	}
+
+	if !helper.CheckPasswordHash(pwd, user.Password) {
+		return User{}, ErrInvalidPassword
+	}
+
+	return user, nil
 }

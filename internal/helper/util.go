@@ -1,11 +1,11 @@
-package server
+package helper
 
 import (
 	"crypto/rand"
 	"encoding/binary"
 )
 
-func generateURL() string {
+func GenerateURL() string {
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
 	const length = 8
 	b := make([]byte, length)
