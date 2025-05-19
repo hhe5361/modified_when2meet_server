@@ -1,4 +1,4 @@
-package server
+package router
 
 import (
 	"better-when2meet/internal/helper"
