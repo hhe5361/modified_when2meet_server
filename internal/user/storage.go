@@ -43,7 +43,7 @@ func (u *Storage) UsersByroomId(id int64) ([]User, error) {
 }
 
 func (u *Storage) InsertUser(r ReqLogin, roomdId int64) (int64, error) {
-	query := `insert into user (room_id, name, password, time_region,created_at,updated_at) VALUES (?, ?, ?, ?, ?, ?) `
+	query := `insert into user (room_id, name, password, time_region) VALUES (?, ?, ?, ?) `
 	return db.QueryExec(u.db, query, roomdId, r.Name, r.Password, r.TimeRegion)
 }
 

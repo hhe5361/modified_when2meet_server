@@ -77,7 +77,7 @@ func QueryRows[T any](db *sql.DB, query string, scanFunc func(*sql.Rows) (T, err
 func QueryExec(db *sql.DB, query string, args ...any) (int64, error) {
 	res, err := db.Exec(query, args...)
 	if err != nil {
-		return -1, errors.New("query execution failed")
+		return -1, fmt.Errorf("query execution failed: %v, query: %s, args: %v", err, query, args)
 	}
 	id, _ := res.LastInsertId()
 

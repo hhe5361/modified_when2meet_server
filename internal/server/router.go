@@ -1,4 +1,4 @@
-package router
+package server
 
 import (
 	"better-when2meet/internal/db"
@@ -8,22 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitServer() error {
-	// Initialize database connection
+func SetupRouter() *gin.Engine {
 	database := db.InitDB()
 	roomRepo := room.New(database)
 	userRepo := user.New(database)
-	// Initialize Gin router
+
 	r := gin.Default()
 
-	// Room endpoints
 	r.POST("/rooms", CreateRoomHandler(roomRepo))
-	// r.GET("/rooms/:url", GetRoomInfoHandler(roomRepo))
-	r.POST("/rooms/:url")
-
-	//user login or register
 	r.POST("/rooms/:url/login", RegisterHandler(roomRepo, userRepo))
+	r.GET("/rooms/:url", GetRoomInfoHandler(roomRepo, userRepo))
+	return r
+}
 
-	// Start server
+func InitServer() error {
+	r := SetupRouter()
 	return r.Run(":8080")
 }

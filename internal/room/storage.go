@@ -3,7 +3,7 @@ package room
 import (
 	"better-when2meet/internal/db"
 	"database/sql"
-	"errors"
+	"fmt"
 )
 
 type Storage struct {
@@ -18,18 +18,34 @@ func New(db *sql.DB) *Storage {
 
 func scanRoom(rows *sql.Rows) (Room, error) {
 	var r Room
-	err := rows.Scan(&r.ID, &r.Name, &r.URL, &r.StartTime, &r.EndTime, &r.TimeRegion, &r.IsOnline, &r.CreatedAt, &r.UpdatedAt)
+	err := rows.Scan(
+		&r.ID,
+		&r.Name,
+		&r.URL,
+		&r.TimeRegion,
+		&r.CreatedAt,
+		&r.UpdatedAt,
+		&r.StartTime,
+		&r.EndTime,
+		&r.IsOnline,
+	)
 	if err != nil {
-		return Room{}, errors.New("server Error: room scan is failed")
+		return Room{}, fmt.Errorf("failed to scan room: %w", err)
 	}
 	return r, nil
 }
 
 func scanRoomDate(rows *sql.Rows) (RoomDate, error) {
 	var r RoomDate
-	err := rows.Scan(&r.ID, &r.RoomID, &r.Year, &r.Month, &r.Day)
+	err := rows.Scan(
+		&r.ID,
+		&r.RoomID,
+		&r.Year,
+		&r.Month,
+		&r.Day,
+	)
 	if err != nil {
-		return RoomDate{}, errors.New("server Error : roomdate scan is failed")
+		return RoomDate{}, fmt.Errorf("failed to scan room date: %w", err)
 	}
 	return r, nil
 }
@@ -45,8 +61,8 @@ func (r *Storage) GetRoomByUrl(url string) (Room, error) {
 }
 
 func (r *Storage) InsertRoom(m ReqCreateRoom, url string) error {
-	query := `INSERT INTO room (name, url, start_time, end_time, time_region, is_online, created_at, updated_at) 
-		VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`
+	query := `INSERT INTO room (name, url, start_time, end_time, time_region, is_online) 
+		VALUES (?, ?, ?, ?, ?, ?)`
 
 	id, err := db.QueryExec(r.db, query, m.RoomName, url, m.StartTime, m.EndTime, m.TimeRegion, m.IsOnline)
 
@@ -76,6 +92,6 @@ func (r *Storage) InsertRoomDate(dates []ReqRoomDate, roomId int64) error {
 }
 
 func (r *Storage) GetRoomDatesByRoomID(roomId int64) ([]RoomDate, error) {
-	query := `SELECT * FROM room_dates WHERE room_id = ?`
+	query := `SELECT * FROM roomdate WHERE room_id = ?`
 	return db.QueryRows(r.db, query, scanRoomDate, roomId)
 }

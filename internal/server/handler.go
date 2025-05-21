@@ -1,6 +1,7 @@
-package router
+package server
 
 import (
+	"better-when2meet/internal/auth"
 	"better-when2meet/internal/helper"
 	"better-when2meet/internal/room"
 	"better-when2meet/internal/user"
@@ -15,10 +16,14 @@ func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 		var newRoom room.ReqCreateRoom
 		if err := c.ShouldBindJSON(&newRoom); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
+			return
 		}
 
 		if err := strg.InsertRoom(newRoom, helper.GenerateURL()); err != nil {
-			c.JSON(500, gin.H{"error": "Failed to create room"})
+			c.JSON(500, gin.H{
+				"error":   "Failed to create room",
+				"details": err.Error(),
+			})
 			return
 		}
 
@@ -29,11 +34,6 @@ func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 // 방 정보 조회
 // room 관련 정보, users , user의 availble gintime
 func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.HandlerFunc {
-	type Data struct {
-		roomInfo room.Room
-		users    []user.UserDetail
-	}
-
 	return func(c *gin.Context) {
 		url := c.Param("url")
 		room, err := strRoom.GetRoomByUrl(url)
@@ -46,15 +46,19 @@ func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.Handl
 			c.JSON(404, gin.H{"error": "get user failed"})
 			return
 		}
-		data := Data{room, usersDetail}
 
-		c.JSON(200, gin.H{"message": "Success", "data": data})
+		c.JSON(200, gin.H{
+			"message": "Success",
+			"data": gin.H{
+				"roomInfo": room,
+				"users":    usersDetail,
+			},
+		})
 	}
 }
 
 // register 후 jwt 반환 세션 연결용
 func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
-
 	return func(c *gin.Context) {
 		var req user.ReqLogin
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
@@ -70,6 +74,12 @@ func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 		userData, err := ustrg.Login(req.Name, req.Password, room.ID)
 		if errors.Is(err, user.ErrUserNotFound) {
 			//user가 없을 경우 create
+			userId, err := ustrg.InsertUser(req, room.ID)
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Failed to create user"})
+				return
+			}
+			userData.ID = userId
 		} else if errors.Is(err, user.ErrInvalidPassword) {
 			c.JSON(404, gin.H{"error": "Invalid Password"})
 			return
@@ -84,9 +94,17 @@ func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 			c.JSON(404, gin.H{"error": err})
 			return
 		}
+
+		token, err := auth.GenerateJWT(userData.ID)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to generate token"})
+			return
+		}
+
 		c.JSON(200, gin.H{
-			"message": "success",
-			"data":    userDetail,
+			"message":   "success",
+			"data":      userDetail,
+			"jwt_token": token,
 		})
 	}
 }
