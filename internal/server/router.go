@@ -5,6 +5,7 @@ import (
 	"better-when2meet/internal/room"
 	"better-when2meet/internal/user"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,7 @@ func SetupRouter() *gin.Engine {
 	userRepo := user.New(database)
 
 	r := gin.Default()
+	r.Use(cors.Default())
 
 	r.POST("/rooms", CreateRoomHandler(roomRepo))
 	r.POST("/rooms/:url/login", RegisterHandler(roomRepo, userRepo))

@@ -13,42 +13,6 @@ func New(db *sql.DB) *Storage {
 	return &Storage{db: db}
 }
 
-// Scan(*sql.Rows) (T, error)
-
-// func scanRoom(rows *sql.Rows) (Room, error) {
-// 	var r Room
-// 	err := rows.Scan(
-// 		&r.ID,
-// 		&r.Name,
-// 		&r.URL,
-// 		&r.TimeRegion,
-// 		&r.CreatedAt,
-// 		&r.UpdatedAt,
-// 		&r.StartTime,
-// 		&r.EndTime,
-// 		&r.IsOnline,
-// 	)
-// 	if err != nil {
-// 		return Room{}, fmt.Errorf("failed to scan room: %w", err)
-// 	}
-// 	return r, nil
-// }
-
-// func scanRoomDate(rows *sql.Rows) (RoomDate, error) {
-// 	var r RoomDate
-// 	err := rows.Scan(
-// 		&r.ID,
-// 		&r.RoomID,
-// 		&r.Year,
-// 		&r.Month,
-// 		&r.Day,
-// 	)
-// 	if err != nil {
-// 		return RoomDate{}, fmt.Errorf("failed to scan room date: %w", err)
-// 	}
-// 	return r, nil
-// }
-
 func (r *Storage) GetRoomById(id int) (Room, error) {
 	query := "SELECT * FROM room WHERE id = ?"
 	return db.QueryOnlyRow(r.db, query, db.ScanStruct[Room], id)
