@@ -6,28 +6,50 @@ import (
 	"better-when2meet/internal/room"
 	"better-when2meet/internal/user"
 	"errors"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+type Response struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+}
 
 // 방 생성
 func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newRoom room.ReqCreateRoom
 		if err := c.ShouldBindJSON(&newRoom); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := strg.InsertRoom(newRoom, helper.GenerateURL()); err != nil {
-			c.JSON(500, gin.H{
-				"error":   "Failed to create room",
-				"details": err.Error(),
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Invalid request format: " + err.Error(),
 			})
 			return
 		}
 
-		c.JSON(200, gin.H{"message": "Room created successfully"})
+		//check field type
+		if valid, err := room.CheckFieldType(newRoom); !valid {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: err.Error(),
+			})
+			return
+		}
+
+		url := helper.GenerateURL()
+		if err := strg.InsertRoom(newRoom, url); err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to create room: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Message: "Room created successfully",
+			Data: gin.H{
+				"url": url,
+			},
+		})
 	}
 }
 
@@ -36,22 +58,26 @@ func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		url := c.Param("url")
-		room, err := strRoom.GetRoomByUrl(url)
+		room, err := strRoom.GetRoomDetailByUrl(url)
 		if err != nil {
-			c.JSON(404, gin.H{"error": "Room not found"})
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Room not found",
+			})
 			return
 		}
-		usersDetail, err := strgUser.UsersDetailByRoomId(int64(room.ID))
+		usersDetail, err := strgUser.UsersDetailByRoomId(int64(room.Room.ID))
 		if err != nil {
-			c.JSON(404, gin.H{"error": "get user failed"})
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to get users: " + err.Error(),
+			})
 			return
 		}
 
-		c.JSON(200, gin.H{
-			"message": "Success",
-			"data": gin.H{
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+			Data: gin.H{
 				"roomInfo": room,
-				"users":    usersDetail,
+				"users":    usersDetail, //users 에 해당 내용 들어감.
 			},
 		})
 	}
@@ -62,12 +88,17 @@ func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req user.ReqLogin
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-			c.JSON(404, gin.H{"error": "Can not Bind Body to Json"}) //이 부분 status code 고쳐야 할 듯
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Invalid request format: " + err.Error(),
+			})
+			return
 		}
 		//get roomId
 		room, err := rstrg.GetRoomByUrl(c.Param("url"))
 		if err != nil {
-			c.JSON(404, gin.H{"error": "Room not found"})
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Room not found",
+			})
 			return
 		}
 		//check if user is existed
@@ -76,50 +107,177 @@ func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 			//user가 없을 경우 create
 			userId, err := ustrg.InsertUser(req, room.ID)
 			if err != nil {
-				c.JSON(500, gin.H{"error": "Failed to create user"})
+				c.JSON(http.StatusInternalServerError, Response{
+					Error: "Failed to create user: " + err.Error(),
+				})
 				return
 			}
 			userData.ID = userId
+
 		} else if errors.Is(err, user.ErrInvalidPassword) {
-			c.JSON(404, gin.H{"error": "Invalid Password"})
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Invalid password",
+			})
 			return
-		} else {
-			c.JSON(404, gin.H{"error": err})
+		} else if err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Login failed: " + err.Error(),
+			})
 			return
 		}
 
 		//login 성공했을 때
 		userDetail, err := ustrg.UserDetailById(userData.ID)
 		if err != nil {
-			c.JSON(404, gin.H{"error": err})
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to get user details: " + err.Error(),
+			})
 			return
 		}
 
-		token, err := auth.GenerateJWT(userData.ID)
+		token, err := auth.GenerateJWT(userData.ID, room.ID)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to generate token"})
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to generate token: " + err.Error(),
+			})
 			return
 		}
 
-		c.JSON(200, gin.H{
-			"message":   "success",
-			"data":      userDetail,
-			"jwt_token": token,
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+			Data: gin.H{
+				"user":      userDetail,
+				"jwt_token": token,
+			},
 		})
 	}
 }
 
-// user current info 확인
-// func GetRoomInfoHandler(strg *room.Storage) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		var req user.ReqLogin
-// 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-// 			c.JSON(400, gin.H{"error": err.Error()})
-// 			return
-// 		}
+// jwt 토큰 가진 유저가 vote (변경될때마다 전송하는 식으로 작동하면 될 것 같은데 )
+func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("userId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Unauthorized: missing user ID",
+			})
+			return
+		}
+		roomID, exists := c.Get("roomId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Unauthorized: missing room ID",
+			})
+			return
+		}
 
-// 	}
-// }
+		roomIDInt64 := int64(roomID.(float64)) // JWT 는 기본적으로 숫자 타입을 float에 매칭한다네..?
+		userIdInt64 := int64(userID.(float64)) // JWT 는 기본적으로 숫자 타입을 float에 매칭한다네..?
+
+		roomDates, err := rstrg.GetRoomDatesByRoomID(roomIDInt64)
+		if err != nil {
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Room not found",
+			})
+			return
+		}
+
+		var req user.ReqAvailableTime
+		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Invalid request format: " + err.Error(),
+			})
+			return
+		}
+
+		//check if date is valid
+		if err := user.CheckValidDate(roomDates, req); err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: err.Error(),
+			})
+			return
+		}
+
+		// Delete existing votes for this date before inserting new ones
+		if err := ustrg.DeleteVoteTime(userIdInt64, req.Date); err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to update vote time: " + err.Error(),
+			})
+			return
+		}
+
+		// Insert new vote time
+		if err := ustrg.InsertVoteTime(userIdInt64, req); err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to insert vote time: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Message: "Vote time updated successfully",
+		})
+	}
+}
+
+func GetUserDetailHandler(ustrg *user.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("userId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Unauthorized: missing user ID",
+			})
+			return
+		}
+
+		userIdInt64 := int64(userID.(float64))
+
+		userDetail, err := ustrg.UserDetailById(userIdInt64)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to get user details: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+			Data: gin.H{
+				"user": userDetail,
+			},
+		})
+	}
+}
+
+func GetResultHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		url := c.Param("url")
+		room, err := rstrg.GetRoomByUrl(url)
+		if err != nil {
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Room not found",
+			})
+			return
+		}
+
+		roomDates, err := rstrg.GetRoomDatesByRoomID(room.ID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Failed to get room dates",
+			})
+			return
+		}
+
+		// TODO: Implement result calculation logic
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+			Data: gin.H{
+				"room":  room,
+				"dates": roomDates,
+			},
+		})
+	}
+}
 
 //available time vote 기능
 

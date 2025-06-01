@@ -24,6 +24,11 @@ type RoomDate struct {
 	Day    int   `json:"day"`
 }
 
+type RoomDetail struct {
+	Room  Room       `json:"room"`
+	Dates []RoomDate `json:"dates"`
+}
+
 // only allow for below time region string
 var allowedTimeRegions = map[string]bool{
 	"Asia/Seoul":       true,

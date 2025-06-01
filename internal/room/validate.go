@@ -12,8 +12,8 @@ func CheckFieldType(r ReqCreateRoom) (res bool, err error) {
 	return true, nil
 }
 
-func checkFieldTime(start int, end int) bool { //이런 간단한 거는 err 안 넣어도 되잖아
-	if start < end {
+func checkFieldTime(start int, end int) bool {
+	if start > end {
 		return false
 	}
 	if start < 0 || start > 23 || end < 0 || end > 23 {
@@ -22,7 +22,7 @@ func checkFieldTime(start int, end int) bool { //이런 간단한 거는 err 안
 	return true
 }
 
-func checkFieldTimeRegions(r string) bool { //이런 간단한 거는 err 안 넣어도 되잖아
+func checkFieldTimeRegions(r string) bool {
 	_, ok := allowedTimeRegions[r]
 	return ok
 }

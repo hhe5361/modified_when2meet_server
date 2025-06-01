@@ -3,7 +3,6 @@ package room
 import (
 	"better-when2meet/internal/db"
 	"database/sql"
-	"fmt"
 )
 
 type Storage struct {
@@ -16,48 +15,48 @@ func New(db *sql.DB) *Storage {
 
 // Scan(*sql.Rows) (T, error)
 
-func scanRoom(rows *sql.Rows) (Room, error) {
-	var r Room
-	err := rows.Scan(
-		&r.ID,
-		&r.Name,
-		&r.URL,
-		&r.TimeRegion,
-		&r.CreatedAt,
-		&r.UpdatedAt,
-		&r.StartTime,
-		&r.EndTime,
-		&r.IsOnline,
-	)
-	if err != nil {
-		return Room{}, fmt.Errorf("failed to scan room: %w", err)
-	}
-	return r, nil
-}
+// func scanRoom(rows *sql.Rows) (Room, error) {
+// 	var r Room
+// 	err := rows.Scan(
+// 		&r.ID,
+// 		&r.Name,
+// 		&r.URL,
+// 		&r.TimeRegion,
+// 		&r.CreatedAt,
+// 		&r.UpdatedAt,
+// 		&r.StartTime,
+// 		&r.EndTime,
+// 		&r.IsOnline,
+// 	)
+// 	if err != nil {
+// 		return Room{}, fmt.Errorf("failed to scan room: %w", err)
+// 	}
+// 	return r, nil
+// }
 
-func scanRoomDate(rows *sql.Rows) (RoomDate, error) {
-	var r RoomDate
-	err := rows.Scan(
-		&r.ID,
-		&r.RoomID,
-		&r.Year,
-		&r.Month,
-		&r.Day,
-	)
-	if err != nil {
-		return RoomDate{}, fmt.Errorf("failed to scan room date: %w", err)
-	}
-	return r, nil
-}
+// func scanRoomDate(rows *sql.Rows) (RoomDate, error) {
+// 	var r RoomDate
+// 	err := rows.Scan(
+// 		&r.ID,
+// 		&r.RoomID,
+// 		&r.Year,
+// 		&r.Month,
+// 		&r.Day,
+// 	)
+// 	if err != nil {
+// 		return RoomDate{}, fmt.Errorf("failed to scan room date: %w", err)
+// 	}
+// 	return r, nil
+// }
 
 func (r *Storage) GetRoomById(id int) (Room, error) {
 	query := "SELECT * FROM room WHERE id = ?"
-	return db.QueryOnlyRow(r.db, query, scanRoom, id)
+	return db.QueryOnlyRow(r.db, query, db.ScanStruct[Room], id)
 }
 
 func (r *Storage) GetRoomByUrl(url string) (Room, error) {
 	query := "SELECT * FROM room WHERE url = ?"
-	return db.QueryOnlyRow(r.db, query, scanRoom, url)
+	return db.QueryOnlyRow(r.db, query, db.ScanStruct[Room], url)
 }
 
 func (r *Storage) InsertRoom(m ReqCreateRoom, url string) error {
@@ -93,5 +92,21 @@ func (r *Storage) InsertRoomDate(dates []ReqRoomDate, roomId int64) error {
 
 func (r *Storage) GetRoomDatesByRoomID(roomId int64) ([]RoomDate, error) {
 	query := `SELECT * FROM roomdate WHERE room_id = ?`
-	return db.QueryRows(r.db, query, scanRoomDate, roomId)
+	return db.QueryRows(r.db, query, db.ScanStruct[RoomDate], roomId)
+}
+
+func (r *Storage) GetRoomDetailByUrl(url string) (RoomDetail, error) {
+	roomData, err := r.GetRoomByUrl(url)
+	if err != nil {
+		return RoomDetail{}, err
+	}
+	dates, err := r.GetRoomDatesByRoomID(roomData.ID)
+	if err != nil {
+		return RoomDetail{}, err
+	}
+
+	return RoomDetail{
+		Room:  roomData,
+		Dates: dates,
+	}, nil
 }

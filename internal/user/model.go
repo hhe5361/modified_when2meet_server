@@ -14,8 +14,7 @@ type User struct {
 
 type AvailableTime struct {
 	ID            int64     `json:"id"`
-	UserID        int64     `json:"user_id"`
-	RoomID        int64     `json:"room_id"`
+	UserID        int64     `json:"user_id"` //user id 에만 종속으로 할 것인지 ?
 	Date          time.Time `json:"date"`
 	HourEndSlot   int       `json:"hour_end_slot"`
 	HourStartSlot int       `json:"hour_start_slot"`

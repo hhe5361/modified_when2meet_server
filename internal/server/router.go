@@ -17,7 +17,12 @@ func SetupRouter() *gin.Engine {
 
 	r.POST("/rooms", CreateRoomHandler(roomRepo))
 	r.POST("/rooms/:url/login", RegisterHandler(roomRepo, userRepo))
+
 	r.GET("/rooms/:url", GetRoomInfoHandler(roomRepo, userRepo))
+	r.GET("/rooms/:url/user", JWTRoomAuthMiddleware(), GetUserDetailHandler(userRepo))
+
+	r.PUT("/rooms/:url/times", JWTRoomAuthMiddleware(), VoteTimeHandler(roomRepo, userRepo))
+
 	return r
 }
 

@@ -5,6 +5,7 @@ import (
 	"better-when2meet/internal/helper"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 type Storage struct {
@@ -15,31 +16,14 @@ func New(db *sql.DB) *Storage {
 	return &Storage{db: db}
 }
 
-func scanUser(rows *sql.Rows) (User, error) {
-	var u User
-	err := rows.Scan(u.ID, u.RoomID, u.Name, u.Password, u.TimeRegion, u.CreatedAt, u.UpdatedAt)
-	if err != nil {
-		return User{}, errors.New("server Error: room scan is failed")
-	}
-	return u, nil
-}
-
-func scanAvailableTime(rows *sql.Rows) (AvailableTime, error) {
-	var a AvailableTime
-	if err := rows.Scan(&a.ID, &a.RoomID, &a.UserID, &a.Date, &a.HourEndSlot, &a.HourEndSlot, &a.CreatedAt, &a.UpdatedAt); err != nil {
-		return AvailableTime{}, errors.New("fail to scan")
-	}
-	return a, nil
-}
-
 func (u *Storage) UserById(id int64) (User, error) {
 	query := `select * from user where id = ?`
-	return db.QueryOnlyRow(u.db, query, scanUser, id)
+	return db.QueryOnlyRow(u.db, query, db.ScanStruct[User], id)
 }
 
 func (u *Storage) UsersByroomId(id int64) ([]User, error) {
 	query := `select * from user where room_id = ?`
-	return db.QueryRows(u.db, query, scanUser, id)
+	return db.QueryRows(u.db, query, db.ScanStruct[User], id)
 }
 
 func (u *Storage) InsertUser(r ReqLogin, roomdId int64) (int64, error) {
@@ -50,7 +34,7 @@ func (u *Storage) InsertUser(r ReqLogin, roomdId int64) (int64, error) {
 func (u *Storage) TimesByUserId(id int64) ([]AvailableTime, error) {
 	query := `select * from available_time where user_id = ?`
 
-	return db.QueryRows(u.db, query, scanAvailableTime, id)
+	return db.QueryRows(u.db, query, db.ScanStruct[AvailableTime], id)
 }
 
 func (u *Storage) UserDetailById(id int64) (UserDetail, error) {
@@ -89,7 +73,7 @@ func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
 
 func (u *Storage) Login(name string, pwd string, roomId int64) (User, error) {
 	query := `SELECT * FROM user WHERE name = ? AND room_id = ?`
-	user, err := db.QueryOnlyRow(u.db, query, scanUser, name, roomId)
+	user, err := db.QueryOnlyRow(u.db, query, db.ScanStruct[User], name, roomId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return User{}, ErrUserNotFound
@@ -102,4 +86,19 @@ func (u *Storage) Login(name string, pwd string, roomId int64) (User, error) {
 	}
 
 	return user, nil
+}
+
+func (u *Storage) InsertVoteTime(userId int64, times ReqAvailableTime) error {
+	query := `INSERT into available_time (user_id, date, hour_start_slot, hour_end_slot) values (?,?,?,?)`
+	_, err := db.QueryExec(u.db, query, userId, times.Date.Format("2006-01-02"), times.HourStartSlot, times.HourEndSlot)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Storage) DeleteVoteTime(userId int64, date time.Time) error {
+	query := `DELETE FROM available_time WHERE user_id = ? AND date = ?`
+	_, err := db.QueryExec(u.db, query, userId, date.Format("2006-01-02"))
+	return err
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -35,6 +37,48 @@ func InitDB() *sql.DB {
 	}
 
 	return db
+}
+
+func ScanStruct[T any](rows *sql.Rows) (T, error) {
+	var dest T
+	v := reflect.ValueOf(&dest).Elem()
+	t := v.Type()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	fieldMap := map[string]int{}
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("json")
+		if tag == "" {
+			tag = strings.ToLower(field.Name)
+		}
+		fieldMap[tag] = i
+	}
+
+	scanTargets := make([]any, len(columns))
+	columnPointers := make([]any, len(columns))
+	for i, col := range columns {
+		if fieldIndex, ok := fieldMap[col]; ok {
+			field := v.Field(fieldIndex)
+			columnPointers[i] = field.Addr().Interface()
+		} else {
+			var dummy any
+			columnPointers[i] = &dummy
+		}
+		scanTargets[i] = columnPointers[i]
+	}
+
+	if err := rows.Scan(scanTargets...); err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return dest, nil
 }
 
 // get row

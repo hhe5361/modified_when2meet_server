@@ -10,9 +10,10 @@ import (
 var jwtKey = []byte("my_secret_key")
 
 // token
-func GenerateJWT(userId int64) (string, error) {
+func GenerateJWT(userId int64, roomId int64) (string, error) {
 	claims := jwt.MapClaims{
 		"userId": userId,
+		"roomId": roomId,
 		"exp":    time.Now().Add(15 * time.Minute).Unix(),
 		"iat":    time.Now().Unix(),
 		"iss":    "myapp",
