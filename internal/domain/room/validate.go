@@ -1,11 +1,15 @@
 package room
 
-import "errors"
+import (
+	"errors"
+	"log"
+)
 
 func CheckFieldType(r ReqCreateRoom) (res bool, err error) {
 	if !checkFieldTime(r.StartTime, r.EndTime) {
 		return false, errors.New("start and end time format is not accepted")
 	}
+	log.Printf("Checking time region: '%s'", r.TimeRegion)
 	if !checkFieldTimeRegions(r.TimeRegion) {
 		return false, errors.New("time region is not existed")
 	}
@@ -23,6 +27,7 @@ func checkFieldTime(start int, end int) bool {
 }
 
 func checkFieldTimeRegions(r string) bool {
+	log.Printf("Available time regions: %v", allowedTimeRegions)
 	_, ok := allowedTimeRegions[r]
 	return ok
 }

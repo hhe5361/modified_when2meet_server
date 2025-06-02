@@ -15,8 +15,8 @@ type ResUser struct {
 }
 
 type UserDetail struct {
-	User          ResUser
-	AvailableTime []AvailableTime
+	User          ResUser         `json:"user"`
+	AvailableTime []AvailableTime `json:"available_time"`
 }
 
 type ReqAvailableTime struct {

@@ -14,4 +14,3 @@ type ReqCreateRoom struct {
 	IsOnline      bool          `json:"is_online"`
 	VoteableRooms []ReqRoomDate `json:"voteable_rooms"`
 }
-

@@ -23,12 +23,12 @@ POST /rooms
 #### Request Body
 ```json
 {
-    "roomName": "Team Meeting",
-    "timeRegion": "Asia/Seoul",
-    "startTime": 9,
-    "endTime": 18,
-    "isOnline": false,
-    "voteableRooms": [
+    "room_name": "Team Meeting",
+    "time_region": "Asia/Seoul",
+    "start_time": 9,
+    "end_time": 18,
+    "is_online": false,
+    "voteable_rooms": [
         {
             "year": 2024,
             "month": 3,
@@ -60,7 +60,7 @@ POST /rooms/:url/login
 {
     "name": "John Doe",
     "password": "yourpassword",
-    "timeRegion": "Asia/Seoul"
+    "time_region": "Asia/Seoul"
 }
 ```
 
@@ -72,8 +72,8 @@ POST /rooms/:url/login
         "user": {
             "id": 1,
             "name": "John Doe",
-            "timeRegion": "Asia/Seoul",
-            "availableTimes": []
+            "time_region": "Asia/Seoul",
+            "available_times": []
         },
         "jwt_token": "eyJhbGciOiJIUzI1NiIs..."
     }
@@ -96,10 +96,12 @@ GET /rooms/:url
             "id": 1,
             "name": "Team Meeting",
             "url": "room-abc123",
-            "startTime": 9,
-            "endTime": 18,
-            "timeRegion": "Asia/Seoul",
-            "isOnline": false
+            "start_time": 9,
+            "end_time": 18,
+            "time_region": "Asia/Seoul",
+            "is_online": false,
+            "created_at": "2024-03-01T00:00:00Z",
+            "updated_at": "2024-03-01T00:00:00Z"
         },
         "vote_table": {
             "2024-03-01": [
@@ -133,12 +135,16 @@ Authorization: Bearer <jwt_token>
         "user": {
             "id": 1,
             "name": "John Doe",
-            "timeRegion": "Asia/Seoul",
-            "availableTimes": [
+            "time_region": "Asia/Seoul",
+            "available_times": [
                 {
-                    "date": "2024-03-01",
-                    "hourStartSlot": 9,
-                    "hourEndSlot": 12
+                    "id": 1,
+                    "user_id": 1,
+                    "date": "2024-03-01T00:00:00Z",
+                    "hour_start_slot": 9,
+                    "hour_end_slot": 12,
+                    "created_at": "2024-03-01T00:00:00Z",
+                    "updated_at": "2024-03-01T00:00:00Z"
                 }
             ]
         }
@@ -162,8 +168,8 @@ Authorization: Bearer <jwt_token>
 ```json
 {
     "date": "2024-03-01T00:00:00Z",
-    "hourStartSlot": 9,
-    "hourEndSlot": 12
+    "hour_start_slot": 9,
+    "hour_end_slot": 12
 }
 ```
 
