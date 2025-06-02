@@ -2,9 +2,10 @@ package server
 
 import (
 	"better-when2meet/internal/auth"
+	"better-when2meet/internal/domain/meeting"
+	"better-when2meet/internal/domain/room"
+	"better-when2meet/internal/domain/user"
 	"better-when2meet/internal/helper"
-	"better-when2meet/internal/room"
-	"better-when2meet/internal/user"
 	"errors"
 	"net/http"
 
@@ -58,14 +59,14 @@ func CreateRoomHandler(strg *room.Storage) gin.HandlerFunc {
 func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		url := c.Param("url")
-		room, err := strRoom.GetRoomDetailByUrl(url)
+		roomDetail, err := strRoom.GetRoomDetailByUrl(url)
 		if err != nil {
 			c.JSON(http.StatusNotFound, Response{
 				Error: "Room not found",
 			})
 			return
 		}
-		usersDetail, err := strgUser.UsersDetailByRoomId(int64(room.Room.ID))
+		usersDetail, err := strgUser.UsersDetailByRoomId(int64(roomDetail.Room.ID))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, Response{
 				Error: "Failed to get users: " + err.Error(),
@@ -73,17 +74,24 @@ func GetRoomInfoHandler(strRoom *room.Storage, strgUser *user.Storage) gin.Handl
 			return
 		}
 
+		data, err := meeting.ToVoteTable(usersDetail, roomDetail)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Error: "Failed to convert voteTable: " + err.Error(),
+			})
+		}
+
 		c.JSON(http.StatusOK, Response{
 			Message: "Success",
 			Data: gin.H{
-				"roomInfo": room,
-				"users":    usersDetail, //users 에 해당 내용 들어감.
+				"roomInfo":   roomDetail.Room,
+				"vote_table": data, //users 에 해당 내용 들어감.
 			},
 		})
 	}
 }
 
-// register 후 jwt 반환 세션 연결용
+// register 후 jwt 반환 세션 연결용 아 함수 너무 긴 것 같음. 리팩토링 ㄱㄱ 책임 분리 중복 최소화
 func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req user.ReqLogin
@@ -191,7 +199,7 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 		}
 
 		//check if date is valid
-		if err := user.CheckValidDate(roomDates, req); err != nil {
+		if err := meeting.CheckValidDate(roomDates, req); err != nil {
 			c.JSON(http.StatusBadRequest, Response{
 				Error: err.Error(),
 			})

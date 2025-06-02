@@ -2,8 +2,8 @@ package server
 
 import (
 	"better-when2meet/internal/db"
-	"better-when2meet/internal/room"
-	"better-when2meet/internal/user"
+	"better-when2meet/internal/domain/room"
+	"better-when2meet/internal/domain/user"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

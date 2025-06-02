@@ -1,10 +1,9 @@
-package test
+package server
 
 import (
 	"better-when2meet/internal/db"
-	"better-when2meet/internal/room"
-	"better-when2meet/internal/server"
-	"better-when2meet/internal/user"
+	"better-when2meet/internal/domain/room"
+	"better-when2meet/internal/domain/user"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -16,15 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Response = server.Response
-
 func setupTestRouter() (*gin.Engine, *room.Storage, *user.Storage) {
 	database := db.InitDB()
 	roomRepo := room.New(database)
 	userRepo := user.New(database)
 
 	gin.SetMode(gin.TestMode)
-	r := server.SetupRouter()
+	r := SetupRouter()
 
 	return r, roomRepo, userRepo
 }

@@ -3,7 +3,7 @@ package server
 import (
 	"better-when2meet/internal/auth"
 	"better-when2meet/internal/db"
-	"better-when2meet/internal/room"
+	"better-when2meet/internal/domain/room"
 	"net/http"
 	"strings"
 

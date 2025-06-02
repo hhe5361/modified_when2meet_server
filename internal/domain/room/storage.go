@@ -69,6 +69,11 @@ func (r *Storage) GetRoomDetailByUrl(url string) (RoomDetail, error) {
 		return RoomDetail{}, err
 	}
 
+	// Initialize empty slice if dates is nil
+	if dates == nil {
+		dates = []RoomDate{}
+	}
+
 	return RoomDetail{
 		Room:  roomData,
 		Dates: dates,

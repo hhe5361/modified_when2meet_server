@@ -1,11 +1,12 @@
-package user
+package meeting
 
 import (
-	"better-when2meet/internal/room"
+	"better-when2meet/internal/domain/room"
+	"better-when2meet/internal/domain/user"
 	"errors"
 )
 
-func CheckValidDate(dates []room.RoomDate, req ReqAvailableTime) error {
+func CheckValidDate(dates []room.RoomDate, req user.ReqAvailableTime) error {
 
 	if req.HourEndSlot < req.HourStartSlot {
 		return errors.New("hour end slot must be greater than hour start slot")

@@ -8,8 +8,14 @@ type ReqLogin struct {
 	TimeRegion string `json:"time_region"`
 }
 
+type ResUser struct {
+	ID         int64  `json:"id"`
+	Name       string `json:"name"`
+	TimeRegion string `json:"time_region"`
+}
+
 type UserDetail struct {
-	User          User
+	User          ResUser
 	AvailableTime []AvailableTime
 }
 

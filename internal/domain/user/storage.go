@@ -48,7 +48,11 @@ func (u *Storage) UserDetailById(id int64) (UserDetail, error) {
 		return UserDetail{}, e
 	}
 
-	return UserDetail{user, times}, nil
+	if times == nil {
+		times = []AvailableTime{}
+	}
+
+	return UserDetail{user.ToResUser(), times}, nil
 }
 
 func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
@@ -71,21 +75,23 @@ func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
 	return userDetails, nil
 }
 
-func (u *Storage) Login(name string, pwd string, roomId int64) (User, error) {
+// user 정보 별도로 반환하지 않음.
+func (u *Storage) Login(name string, pwd string, roomId int64) (ResUser, error) {
 	query := `SELECT * FROM user WHERE name = ? AND room_id = ?`
+
 	user, err := db.QueryOnlyRow(u.db, query, db.ScanStruct[User], name, roomId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return User{}, ErrUserNotFound
+			return ResUser{}, ErrUserNotFound
 		}
-		return User{}, err
+		return ResUser{}, err
 	}
 
 	if !helper.CheckPasswordHash(pwd, user.Password) {
-		return User{}, ErrInvalidPassword
+		return ResUser{}, ErrInvalidPassword
 	}
 
-	return user, nil
+	return user.ToResUser(), nil
 }
 
 func (u *Storage) InsertVoteTime(userId int64, times ReqAvailableTime) error {
