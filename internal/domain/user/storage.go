@@ -108,3 +108,18 @@ func (u *Storage) DeleteVoteTime(userId int64, date time.Time) error {
 	_, err := db.QueryExec(u.db, query, userId, date.Format("2006-01-02"))
 	return err
 }
+
+// GetUserByName retrieves a user by name and room ID
+func (u *Storage) GetUserByName(name string, roomId int64) (User, error) {
+	query := `SELECT * FROM user WHERE name = ? AND room_id = ?`
+
+	user, err := db.QueryOnlyRow(u.db, query, db.ScanStruct[User], name, roomId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return User{}, ErrUserNotFound
+		}
+		return User{}, err
+	}
+
+	return user, nil
+}

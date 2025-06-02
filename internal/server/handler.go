@@ -111,8 +111,17 @@ func RegisterHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 		}
 		//check if user is existed
 		userData, err := ustrg.Login(req.Name, req.Password, room.ID)
+
 		if errors.Is(err, user.ErrUserNotFound) {
 			//user가 없을 경우 create
+			encrypt, err := helper.EncryptPassword(req.Password)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, Response{
+					Error: "Failed to encrypt user: " + err.Error(),
+				})
+			}
+			req.Password = encrypt
+
 			userId, err := ustrg.InsertUser(req, room.ID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, Response{
@@ -228,6 +237,7 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 	}
 }
 
+// User Detail
 func GetUserDetailHandler(ustrg *user.Storage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("userId")
