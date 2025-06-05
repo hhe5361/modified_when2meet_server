@@ -199,7 +199,7 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 			return
 		}
 
-		var req user.ReqAvailableTime
+		var req user.ReqAvailableTimeList
 		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, Response{
 				Error: "Invalid request format: " + err.Error(),
@@ -207,16 +207,8 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 			return
 		}
 
-		//check if date is valid
-		if err := meeting.CheckValidDate(roomDates, req); err != nil {
-			c.JSON(http.StatusBadRequest, Response{
-				Error: err.Error(),
-			})
-			return
-		}
-
 		// Delete existing votes for this date before inserting new ones
-		if err := ustrg.DeleteVoteTime(userIdInt64, req.Date); err != nil {
+		if err := ustrg.DeleteVoteTime(userIdInt64); err != nil {
 			c.JSON(http.StatusInternalServerError, Response{
 				Error: "Failed to update vote time: " + err.Error(),
 			})
@@ -224,11 +216,21 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 		}
 
 		// Insert new vote time
-		if err := ustrg.InsertVoteTime(userIdInt64, req); err != nil {
-			c.JSON(http.StatusInternalServerError, Response{
-				Error: "Failed to insert vote time: " + err.Error(),
-			})
-			return
+		for _, timeSlot := range req.Times {
+			//check if date is valid
+			if err := meeting.CheckValidDate(roomDates, timeSlot); err != nil {
+				c.JSON(http.StatusBadRequest, Response{
+					Error: err.Error(),
+				})
+				return
+			}
+
+			if err := ustrg.InsertVoteTime(userIdInt64, timeSlot); err != nil {
+				c.JSON(http.StatusInternalServerError, Response{
+					Error: "Failed to insert vote time: " + err.Error(),
+				})
+				return
+			}
 		}
 
 		c.JSON(http.StatusOK, Response{

@@ -21,6 +21,10 @@ type UserDetail struct {
 
 type ReqAvailableTime struct {
 	Date          time.Time `json:"date"`
-	HourEndSlot   int       `json:"hour_end_slot"`
 	HourStartSlot int       `json:"hour_start_slot"`
+	HourEndSlot   int       `json:"hour_end_slot"`
+}
+
+type ReqAvailableTimeList struct {
+	Times []ReqAvailableTime `json:"times"`
 }

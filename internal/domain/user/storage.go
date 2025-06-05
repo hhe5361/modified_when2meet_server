@@ -5,7 +5,6 @@ import (
 	"better-when2meet/internal/helper"
 	"database/sql"
 	"errors"
-	"time"
 )
 
 type Storage struct {
@@ -103,9 +102,9 @@ func (u *Storage) InsertVoteTime(userId int64, times ReqAvailableTime) error {
 	return nil
 }
 
-func (u *Storage) DeleteVoteTime(userId int64, date time.Time) error {
-	query := `DELETE FROM available_time WHERE user_id = ? AND date = ?`
-	_, err := db.QueryExec(u.db, query, userId, date.Format("2006-01-02"))
+func (u *Storage) DeleteVoteTime(userId int64) error {
+	query := `DELETE FROM available_time WHERE user_id = ?`
+	_, err := db.QueryExec(u.db, query, userId)
 	return err
 }
 

@@ -15,198 +15,209 @@ I append below features on my project
 
 ref project: https://www.when2meet.com/
 
-# When2Meet API Documentation
+# When2Meet Server
 
-## Base URL
-```
-http://localhost:8080
-```
+## API Documentation
 
-## Authentication
-Most endpoints require JWT authentication. Include the token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-## Endpoints
-
-### Create Room
-Creates a new meeting room with specified dates and time slots.
-
-```http
-POST /rooms
-```
-
-#### Request Body
+### 1. Create Room
+**Endpoint:** `POST /room`  
+**Description:** Creates a new meeting room  
+**Request Body:**
 ```json
 {
-    "roomName": "Team Meeting",
-    "timeRegion": "Asia/Seoul",
-    "startTime": 9,
-    "endTime": 18,
-    "isOnline": false,
-    "voteableRooms": [
+  "room_name": "string",
+  "time_region": "string",
+  "start_time": "integer",
+  "end_time": "integer",
+  "is_online": "boolean",
+  "voteable_rooms": [
+    {
+      "year": "integer",
+      "month": "integer",
+      "day": "integer"
+    }
+  ]
+}
+```
+**Response:**
+```json
+{
+  "message": "Room created successfully",
+  "data": {
+    "url": "string"
+  },
+  "error": null
+}
+```
+
+### 2. Get Room Info
+**Endpoint:** `GET /room/:url`  
+**Description:** Retrieves room information including users and their available times  
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "roomInfo": {
+      "id": "integer",
+      "room_name": "string",
+      "time_region": "string",
+      "start_time": "integer",
+      "end_time": "integer",
+      "is_online": "boolean",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "vote_table": {
+      "users": [
         {
-            "year": 2024,
-            "month": 3,
-            "day": 1
+          "id": "integer",
+          "name": "string",
+          "time_region": "string",
+          "available_times": [
+            {
+              "date": "datetime",
+              "hour_start_slot": "integer",
+              "hour_end_slot": "integer"
+            }
+          ]
         }
+      ],
+      "dates": [
+        {
+          "year": "integer",
+          "month": "integer",
+          "day": "integer"
+        }
+      ]
+    }
+  },
+  "error": null
+}
+```
+
+### 3. Register/Login
+**Endpoint:** `POST /room/:url/register`  
+**Description:** Registers a new user or logs in an existing user  
+**Request Body:**
+```json
+{
+  "name": "string",
+  "password": "string"
+}
+```
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "user": {
+      "id": "integer",
+      "name": "string",
+      "time_region": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "jwt_token": "string"
+  },
+  "error": null
+}
+```
+
+### 4. Vote Time
+**Endpoint:** `POST /room/:url/vote`  
+**Description:** Updates user's available time slots (requires JWT authentication)  
+**Request Body:**
+```json
+{
+  "times": [
+    {
+      "date": "datetime",
+      "hour_start_slot": "integer",
+      "hour_end_slot": "integer"
+    }
+  ]
+}
+```
+**Response:**
+```json
+{
+  "message": "Vote time updated successfully",
+  "data": null,
+  "error": null
+}
+```
+
+### 5. Get User Detail
+**Endpoint:** `GET /user`  
+**Description:** Retrieves authenticated user's details (requires JWT authentication)  
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "user": {
+      "id": "integer",
+      "name": "string",
+      "time_region": "string",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    }
+  },
+  "error": null
+}
+```
+
+### 6. Get Result
+**Endpoint:** `GET /room/:url/result`  
+**Description:** Retrieves meeting result information  
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "room": {
+      "id": "integer",
+      "room_name": "string",
+      "time_region": "string",
+      "start_time": "integer",
+      "end_time": "integer",
+      "is_online": "boolean",
+      "created_at": "datetime",
+      "updated_at": "datetime"
+    },
+    "dates": [
+      {
+        "year": "integer",
+        "month": "integer",
+        "day": "integer"
+      }
     ]
+  },
+  "error": null
 }
 ```
 
-#### Response
-```json
-{
-    "message": "Room created successfully",
-    "data": {
-        "url": "room-abc123"
-    }
-}
-```
-
-### Register/Login User
-Register a new user or login to an existing room.
-
-```http
-POST /rooms/:url/login
-```
-
-#### Request Body
-```json
-{
-    "name": "John Doe",
-    "password": "yourpassword",
-    "timeRegion": "Asia/Seoul"
-}
-```
-
-#### Response
-```json
-{
-    "message": "Success",
-    "data": {
-        "user": {
-            "id": 1,
-            "name": "John Doe",
-            "timeRegion": "Asia/Seoul",
-            "availableTimes": []
-        },
-        "jwt_token": "eyJhbGciOiJIUzI1NiIs..."
-    }
-}
-```
-
-### Get Room Information
-Retrieves room details including all users and their available times.
-
-```http
-GET /rooms/:url
-```
-
-#### Response
-```json
-{
-    "message": "Success",
-    "data": {
-        "roomInfo": {
-            "id": 1,
-            "name": "Team Meeting",
-            "url": "room-abc123",
-            "startTime": 9,
-            "endTime": 18,
-            "timeRegion": "Asia/Seoul",
-            "isOnline": false
-        },
-        "vote_table": {
-            "2024-03-01": [
-                {
-                    "hour": 9,
-                    "users": ["John Doe", "Jane Smith"]
-                }
-            ]
-        }
-    }
-}
-```
-
-### Get User Details
-Retrieves details of the authenticated user.
-
-```http
-GET /rooms/:url/user
-```
-
-#### Headers
-```
-Authorization: Bearer <jwt_token>
-```
-
-#### Response
-```json
-{
-    "message": "Success",
-    "data": {
-        "user": {
-            "id": 1,
-            "name": "John Doe",
-            "timeRegion": "Asia/Seoul",
-            "availableTimes": [
-                {
-                    "date": "2024-03-01",
-                    "hourStartSlot": 9,
-                    "hourEndSlot": 12
-                }
-            ]
-        }
-    }
-}
-```
-
-### Vote Available Time
-Record or update user's available time slots.
-
-```http
-PUT /rooms/:url/times
-```
-
-#### Headers
-```
-Authorization: Bearer <jwt_token>
-```
-
-#### Request Body
-```json
-{
-    "date": "2024-03-01T00:00:00Z",
-    "hourStartSlot": 9,
-    "hourEndSlot": 12
-}
-```
-
-#### Response
-```json
-{
-    "message": "Vote time updated successfully"
-}
-```
-
-## Error Responses
+### Error Responses
 All endpoints may return the following error responses:
-
 ```json
 {
-    "error": "Error message description"
+  "message": "",
+  "data": null,
+  "error": "Error message"
 }
 ```
 
-Common HTTP Status Codes:
-- 200: Success
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 500: Internal Server Error
+### Authentication
+- JWT token is required for protected endpoints
+- Token should be included in the Authorization header
+- Token contains user ID and room ID information
+
+### Notes
+- All datetime fields are in ISO 8601 format
+- Time slots are represented as integers (e.g., 9 for 9:00 AM)
+- The API uses snake_case for all field names
+- All endpoints return a consistent response structure with message, data, and error fields
 
 ## Time Region Support
 The API supports the following time regions:
