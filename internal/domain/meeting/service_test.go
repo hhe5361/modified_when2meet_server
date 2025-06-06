@@ -33,9 +33,9 @@ func TestToVoteTable(t *testing.T) {
 				Name:       "Alice",
 				TimeRegion: "Asia/Seoul",
 			},
-			AvailableTime: []user.AvailableTime{
+			ResAvailableTime: []user.ResAvailableTime{
 				{
-					Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC),
+					Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 					HourStartSlot: 9,
 					HourEndSlot:   12,
 				},
@@ -47,14 +47,14 @@ func TestToVoteTable(t *testing.T) {
 				Name:       "Bob",
 				TimeRegion: "Asia/Seoul",
 			},
-			AvailableTime: []user.AvailableTime{
+			ResAvailableTime: []user.ResAvailableTime{
 				{
-					Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC),
+					Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 					HourStartSlot: 10,
 					HourEndSlot:   15,
 				},
 				{
-					Date:          time.Date(2024, 3, 2, 0, 0, 0, 0, time.UTC),
+					Date:          time.Date(2024, 3, 2, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 					HourStartSlot: 13,
 					HourEndSlot:   17,
 				},

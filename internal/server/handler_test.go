@@ -235,7 +235,7 @@ func TestVoteTimeHandler(t *testing.T) {
 			name:  "Valid Vote Time",
 			token: token,
 			payload: user.ReqAvailableTime{
-				Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC),
+				Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 				HourStartSlot: 9,
 				HourEndSlot:   12,
 			},
@@ -246,7 +246,7 @@ func TestVoteTimeHandler(t *testing.T) {
 			name:  "Invalid Time Slot",
 			token: token,
 			payload: user.ReqAvailableTime{
-				Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC),
+				Date:          time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"),
 				HourStartSlot: 12,
 				HourEndSlot:   9,
 			},

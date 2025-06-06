@@ -4,6 +4,7 @@ import (
 	"better-when2meet/internal/domain/room"
 	"better-when2meet/internal/domain/user"
 	"fmt"
+	"time"
 )
 
 // userDetail 에 빈 슬라이스 주거나 그렇게 해야할 듯?
@@ -14,18 +15,18 @@ func ToVoteTable(userDetail []user.UserDetail, roomDetail room.RoomDetail) (Vote
 	result := make(VoteTable)
 
 	//make maps
-	//"%04d-%02d-%02d", year, month, day
 	for _, date := range roomDetail.Dates {
 		dateStr := fmt.Sprintf("%04d-%02d-%02d", date.Year, date.Month, date.Day)
 		result[dateStr] = makeHourBlock(roomDetail.Room.StartTime, roomDetail.Room.EndTime)
 	}
 
 	for _, detail := range userDetail {
-		for _, availableTime := range detail.AvailableTime {
+		for _, availableTime := range detail.ResAvailableTime {
+			date, _ := time.Parse("2006-01-02", availableTime.Date)
 			dateStr := fmt.Sprintf("%04d-%02d-%02d",
-				availableTime.Date.Year(),
-				int(availableTime.Date.Month()),
-				availableTime.Date.Day())
+				date.Year(),
+				int(date.Month()),
+				date.Day())
 
 			if blocks, exists := result[dateStr]; exists {
 				for i := range blocks {

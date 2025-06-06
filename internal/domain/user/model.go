@@ -22,10 +22,12 @@ type AvailableTime struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-func (u *User) ToResUser() ResUser {
-	return ResUser{
-		ID:         u.ID,
-		Name:       u.Name,
-		TimeRegion: u.TimeRegion,
+func (a *AvailableTime) ToRes() ResAvailableTime {
+	return ResAvailableTime{
+		ID:            a.ID,
+		UserID:        a.UserID,
+		Date:          a.Date.Format("2006-01-02"),
+		HourEndSlot:   a.HourEndSlot,
+		HourStartSlot: a.HourStartSlot,
 	}
 }

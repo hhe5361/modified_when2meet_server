@@ -207,7 +207,6 @@ func VoteTimeHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc {
 			return
 		}
 
-		// Delete existing votes for this date before inserting new ones
 		if err := ustrg.DeleteVoteTime(userIdInt64); err != nil {
 			c.JSON(http.StatusInternalServerError, Response{
 				Error: "Failed to update vote time: " + err.Error(),

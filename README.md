@@ -20,8 +20,7 @@ ref project: https://www.when2meet.com/
 ## API Documentation
 
 ### 1. Create Room
-**Endpoint:** `POST /room`  
-**Description:** Creates a new meeting room  
+**Endpoint:** `POST /rooms`  
 **Request Body:**
 ```json
 {
@@ -39,138 +38,35 @@ ref project: https://www.when2meet.com/
   ]
 }
 ```
-**Response:**
-```json
-{
-  "message": "Room created successfully",
-  "data": {
-    "url": "string"
-  },
-  "error": null
-}
-```
 
-### 2. Get Room Info
-**Endpoint:** `GET /room/:url`  
-**Description:** Retrieves room information including users and their available times  
-**Response:**
-```json
-{
-  "message": "Success",
-  "data": {
-    "roomInfo": {
-      "id": "integer",
-      "room_name": "string",
-      "time_region": "string",
-      "start_time": "integer",
-      "end_time": "integer",
-      "is_online": "boolean",
-      "created_at": "datetime",
-      "updated_at": "datetime"
-    },
-    "vote_table": {
-      "users": [
-        {
-          "id": "integer",
-          "name": "string",
-          "time_region": "string",
-          "available_times": [
-            {
-              "date": "datetime",
-              "hour_start_slot": "integer",
-              "hour_end_slot": "integer"
-            }
-          ]
-        }
-      ],
-      "dates": [
-        {
-          "year": "integer",
-          "month": "integer",
-          "day": "integer"
-        }
-      ]
-    }
-  },
-  "error": null
-}
-```
-
-### 3. Register/Login
-**Endpoint:** `POST /room/:url/register`  
-**Description:** Registers a new user or logs in an existing user  
+### 2. Login
+**Endpoint:** `POST /rooms/:url/login`  
 **Request Body:**
 ```json
 {
   "name": "string",
-  "password": "string"
-}
-```
-**Response:**
-```json
-{
-  "message": "Success",
-  "data": {
-    "user": {
-      "id": "integer",
-      "name": "string",
-      "time_region": "string",
-      "created_at": "datetime",
-      "updated_at": "datetime"
-    },
-    "jwt_token": "string"
-  },
-  "error": null
+  "password": "string",
+  "time_region": "string"
 }
 ```
 
-### 4. Vote Time
-**Endpoint:** `POST /room/:url/vote`  
-**Description:** Updates user's available time slots (requires JWT authentication)  
+### 3. Vote Time
+**Endpoint:** `PUT /rooms/:url/times`  
 **Request Body:**
 ```json
 {
   "times": [
     {
-      "date": "datetime",
+      "date": "YYYY-MM-DD",
       "hour_start_slot": "integer",
       "hour_end_slot": "integer"
     }
   ]
 }
 ```
-**Response:**
-```json
-{
-  "message": "Vote time updated successfully",
-  "data": null,
-  "error": null
-}
-```
 
-### 5. Get User Detail
-**Endpoint:** `GET /user`  
-**Description:** Retrieves authenticated user's details (requires JWT authentication)  
-**Response:**
-```json
-{
-  "message": "Success",
-  "data": {
-    "user": {
-      "id": "integer",
-      "name": "string",
-      "time_region": "string",
-      "created_at": "datetime",
-      "updated_at": "datetime"
-    }
-  },
-  "error": null
-}
-```
-
-### 6. Get Result
-**Endpoint:** `GET /room/:url/result`  
-**Description:** Retrieves meeting result information  
+### 4. Get Room Info
+**Endpoint:** `GET /rooms/:url`  
 **Response:**
 ```json
 {
@@ -178,13 +74,11 @@ ref project: https://www.when2meet.com/
   "data": {
     "room": {
       "id": "integer",
-      "room_name": "string",
+      "name": "string",
       "time_region": "string",
       "start_time": "integer",
       "end_time": "integer",
-      "is_online": "boolean",
-      "created_at": "datetime",
-      "updated_at": "datetime"
+      "is_online": "boolean"
     },
     "dates": [
       {
@@ -192,36 +86,26 @@ ref project: https://www.when2meet.com/
         "month": "integer",
         "day": "integer"
       }
-    ]
-  },
-  "error": null
+    ],
+    "vote_table": {
+      "YYYY-MM-DD": [
+        {
+          "hour": "integer",
+          "users": ["string"]
+        }
+      ]
+    }
+  }
 }
 ```
-
-### Error Responses
-All endpoints may return the following error responses:
-```json
-{
-  "message": "",
-  "data": null,
-  "error": "Error message"
-}
 ```
 
-### Authentication
-- JWT token is required for protected endpoints
-- Token should be included in the Authorization header
-- Token contains user ID and room ID information
+Additional suggestions:
+1. Add error response examples for common cases
+2. Document the JWT token format and required claims
+3. Add rate limiting information if applicable
+4. Add pagination details if applicable
+5. Document the time slot format more clearly (e.g., 9 = 9:00 AM)
+6. Add examples of successful and error responses for each endpoint
 
-### Notes
-- All datetime fields are in ISO 8601 format
-- Time slots are represented as integers (e.g., 9 for 9:00 AM)
-- The API uses snake_case for all field names
-- All endpoints return a consistent response structure with message, data, and error fields
-
-## Time Region Support
-The API supports the following time regions:
-- Asia/Seoul
-- UTC
-- America/New_York
-- Europe/London 
+Would you like me to provide a complete corrected version of the API documentation?

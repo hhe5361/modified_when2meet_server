@@ -50,8 +50,15 @@ func (u *Storage) UserDetailById(id int64) (UserDetail, error) {
 	if times == nil {
 		times = []AvailableTime{}
 	}
+	resTimes := []ResAvailableTime{}
+	resUser := ResUser{user.ID, user.Name, user.TimeRegion}
 
-	return UserDetail{user.ToResUser(), times}, nil
+	for _, time := range times {
+		result := time.ToRes()
+		resTimes = append(resTimes, result)
+	}
+
+	return UserDetail{User: resUser, ResAvailableTime: resTimes}, nil
 }
 
 func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
@@ -75,27 +82,27 @@ func (u *Storage) UsersDetailByRoomId(id int64) ([]UserDetail, error) {
 }
 
 // user 정보 별도로 반환하지 않음.
-func (u *Storage) Login(name string, pwd string, roomId int64) (ResUser, error) {
+func (u *Storage) Login(name string, pwd string, roomId int64) (User, error) {
 	query := `SELECT * FROM user WHERE name = ? AND room_id = ?`
 
 	user, err := db.QueryOnlyRow(u.db, query, db.ScanStruct[User], name, roomId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ResUser{}, ErrUserNotFound
+			return User{}, ErrUserNotFound
 		}
-		return ResUser{}, err
+		return User{}, err
 	}
 
 	if !helper.CheckPasswordHash(pwd, user.Password) {
-		return ResUser{}, ErrInvalidPassword
+		return User{}, ErrInvalidPassword
 	}
 
-	return user.ToResUser(), nil
+	return user, nil
 }
 
 func (u *Storage) InsertVoteTime(userId int64, times ReqAvailableTime) error {
 	query := `INSERT into available_time (user_id, date, hour_start_slot, hour_end_slot) values (?,?,?,?)`
-	_, err := db.QueryExec(u.db, query, userId, times.Date.Format("2006-01-02"), times.HourStartSlot, times.HourEndSlot)
+	_, err := db.QueryExec(u.db, query, userId, times.Date, times.HourStartSlot, times.HourEndSlot)
 	if err != nil {
 		return err
 	}
