@@ -21,7 +21,7 @@ jobs:
         go-version: '1.24'
 
     - name: Build Go Server
-      run: GOOS=linux GOARCH=amd64 go build -o myserver ./cmd/main.go
+      run: GOOS=linux GOARCH=amd64 go build -o goserver ./cmd/main.go
 
     - name: Deploy binary to Ec2
       uses: appleboy/scp-action@v0.1.4
@@ -29,7 +29,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: "myserver"
+        source: "goserver"
         target: "/home/ubuntu/"
         
     - name: Restart Go server
@@ -39,8 +39,8 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          pkill myserver || true
-          nohup ./myserver &
+          pkill goserver || true
+          nohup ./goserver &
 
 
 
