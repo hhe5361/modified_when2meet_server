@@ -3,6 +3,7 @@ package server
 import (
 	"better-when2meet/internal/auth"
 	"better-when2meet/internal/domain/meeting"
+	"better-when2meet/internal/domain/notice"
 	"better-when2meet/internal/domain/room"
 	"better-when2meet/internal/domain/user"
 	"better-when2meet/internal/helper"
@@ -298,10 +299,129 @@ func GetResultHandler(rstrg *room.Storage, ustrg *user.Storage) gin.HandlerFunc 
 	}
 }
 
-//available time vote 기능
+func GetNoticeHandler(nstrg *notice.Storage, rstrg *room.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		url := c.Param("url")
+		room, err := rstrg.GetRoomByUrl(url)
+		if err != nil {
+			c.JSON(http.StatusNotFound, Response{
+				Error: "Room not found",
+			})
+			return
+		}
 
-//result 추첨 기능
+		res, err := nstrg.GetByRoomID(int(room.ID))
 
-//get result api ?
+		if err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Failed to create notice: " + err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+			Data:    res,
+		})
 
-//jwt 인증?
+	}
+}
+
+func CreateNoticeHandler(nstrg *notice.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("userId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Unauthorized: missing user ID",
+			})
+			return
+		}
+		roomID, exists := c.Get("roomId")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, Response{
+				Error: "Unauthorized: missing room ID",
+			})
+			return
+		}
+
+		var req notice.CreateNoticeReq
+		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Invalid request format: " + err.Error(),
+			})
+			return
+		}
+		if err := nstrg.Insert(req, int(roomID.(float64)), int(userID.(float64))); err != nil {
+			c.JSON(http.StatusBadRequest, Response{
+				Error: "Failed to create notice: " + err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, Response{
+			Message: "Success",
+		})
+
+	}
+}
+
+// 리팩토링할 때 기본 인증 로직은 그냥 하나로 합치는게 나을 듯 너무 맣ㄴ다. delete 기능은 일단 추후에 구현 예정.
+// func DeleteNoticeHandler(nstrg *notice.Storage) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		userID, exists := c.Get("userId")
+// 		if !exists {
+// 			c.JSON(http.StatusUnauthorized, Response{
+// 				Error: "Unauthorized: missing user ID",
+// 			})
+// 			return
+// 		}
+
+// 		noticeID := c.Param("id")
+// 		if noticeID == "" {
+// 			c.JSON(http.StatusBadRequest, Response{
+// 				Error: "Notice ID is required",
+// 			})
+// 			return
+// 		}
+
+// 		noticeIDInt, err := strconv.ParseInt(noticeID, 10, 64)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, Response{
+// 				Error: "Invalid notice ID format",
+// 			})
+// 			return
+// 		}
+
+// 		notices, err := nstrg.GetByRoomID(int(userID.(float64)))
+// 		if err != nil {
+// 			c.JSON(http.StatusInternalServerError, Response{
+// 				Error: "Failed to get notice: " + err.Error(),
+// 			})
+// 			return
+// 		}
+
+// 		found := false
+// 		for _, n := range notices {
+// 			if n.ID == noticeIDInt && n.USERID == int64(userID.(float64)) {
+// 				found = true
+// 				break
+// 			}
+// 		}
+
+// 		if !found {
+// 			c.JSON(http.StatusForbidden, Response{
+// 				Error: "Notice not found or unauthorized",
+// 			})
+// 			return
+// 		}
+
+// 		if err := nstrg.DeleteById(int(noticeIDInt)); err != nil {
+// 			c.JSON(http.StatusInternalServerError, Response{
+// 				Error: "Failed to delete notice: " + err.Error(),
+// 			})
+// 			return
+// 		}
+
+// 		c.JSON(http.StatusOK, Response{
+// 			Message: "Notice deleted successfully",
+// 		})
+// 	}
+// }

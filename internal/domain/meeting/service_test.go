@@ -66,16 +66,6 @@ func TestToVoteTable(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 
-	t.Log("\nVote Table Result:")
-	for date, blocks := range result {
-		t.Logf("\nDate: %s", date)
-		t.Log("Hour | Available Users")
-		t.Log("-------------------")
-		for _, block := range blocks {
-			t.Logf("%2d:00 | %v", block.Hour, block.Users)
-		}
-	}
-
 	date1 := "2024-03-01"
 	assert.Contains(t, result, date1)
 	blocks1 := result[date1]

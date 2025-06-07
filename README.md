@@ -98,6 +98,72 @@ ref project: https://www.when2meet.com/
   }
 }
 ```
+
+### 5. Get User Detail
+**Endpoint:** `GET /user`  
+**Description:** Retrieves authenticated user's details (requires JWT authentication)  
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "user": {
+      "id": "integer",
+      "name": "string",
+      "time_region": "string"
+    },
+    "available_time": [
+      {
+        "id": "integer",
+        "user_id": "integer",
+        "date": "YYYY-MM-DD",
+        "hour_start_slot": "integer",
+        "hour_end_slot": "integer"
+      }
+    ]
+  },
+  "error": null
+}
+```
+
+### 7. Create Notice
+**Endpoint:** `POST /rooms/:url/notices`  
+**Description:** Creates a new notice in the room (requires JWT authentication)  
+**Request Body:**
+```json
+{
+  "content": "string"
+}
+```
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": null,
+  "error": null
+}
+```
+
+### 8. Get Notices
+**Endpoint:** `GET /rooms/:url/notices`  
+**Description:** Gets all notices in the room  
+**Response:**
+```json
+{
+  "message": "Success",
+  "data": {
+    "notices": [
+      {
+        "id": "integer",
+        "content": "string",
+        "created_at": "string",
+        "updated_at": "string",
+        "user_name": "string"
+      }
+    ]
+  },
+  "error": null
+}
 ```
 
 Additional suggestions:
