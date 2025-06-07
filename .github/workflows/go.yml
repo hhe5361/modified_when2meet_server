@@ -40,7 +40,8 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           pkill goserver || true
-          nohup ./goserver &
+          nohup ./goserver > server.log 2>&1 < /dev/null &
+          disown
 
 
 
